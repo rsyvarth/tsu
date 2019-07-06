@@ -1,0 +1,68 @@
+---
+id: offloading-redshift-queries-to-postgres
+title: Offloading subsecond Redshift queries to Postgres
+category: Data Pipelines
+status: draft
+preview: >
+  At Gamesight we rely heavily on AWS Redshift to perform the in-database transformations
+  and aggregations for the ELT pipeline that power our real-time analytics. Redshift’s massively
+  parallel architecture is very well suited for this workload and gives us great performance
+  when transforming large amounts of data. Unfortunately, once we have our data summarized
+  we need to be able to expose those metrics to our end users, and this is where Redshift
+  begins to struggle.
+---
+
+> This article is also available through the Gamesight engineering blog [here](https://blog.gamesight.io)
+
+At Gamesight we rely heavily on AWS Redshift to perform the in-database transformations
+and aggregations for the ELT pipeline that power our real-time analytics. Redshift’s massively
+parallel architecture is very well suited for this workload and gives us great performance
+when transforming large amounts of data. Unfortunately, once we have our data summarized
+we need to be able to expose those metrics to our end users, and this is where Redshift
+begins to struggle.
+
+While most of the data processing to this point has been doing operations on large
+datasets, the queries that power our interface tend to only pull a handful of records
+at a time. The tradeoffs made in Redshift to enable its performance when scanning
+terabytes of data make it a truly terrible as a platform for large volumes of highly
+selective queries with minimal aggregation.
+
+In our early prototyping we found that some simple operations such as looking up
+records by ID from our Redshift cluster could take upwards of 5 seconds under moderate
+load. Below you can see the latency distribution of 10,000 simple lookups by ID against
+a Redshift table of approximately XM rows.
+
+ADD DIAGRAM HERE
+
+We need to find a data storage solution for our reporting data into that would
+be able to handle the query workload from our application. Luckily for us, there
+is a wonderful article on the AWS blog about solving this exact problem using Postgres
+and an extension called dblink. This solution creates a connection between Postgres and
+Redshift allowing you to easily move data directly between the two systems, a sort of
+“best of both worlds” solution.
+
+Before we dive into the details, let’s do a quick comparison of the architecture
+of Postgres and Redshift.
+
+#### Architecture Comparison
+
+#### Solution Details
+
+#### Some Benchmarks
+
+Future Work
+- Search indexes
+- Specialized stores
+- Time series data
+- Focus on having a single source of truth and various derivative data storage solutions depending on the application’s needs. Redshift is great at being that source of truth for us.
+
+- Motivation
+  - Redshift compute is valuable
+  - Redshift is bad at handling individual or small batch record selection, especially lookups by id
+  - Overhead on compilation can be devastating for small amounts of data
+- Solution
+  - Use DBlink to sync records that are frequently accessed for non-analytical use
+  - Provides indexes and single ms response times event on large tables
+  - Keep consistent query syntax between two different data sources (generally, minus some functions) to reduce complexity when switching/doing fallbacks (opposed to a pure cache or a nosql solution). Less expensive due to large amount of regular data transfer
+- Future work
+  - Keeping small amounts of data in postgres, setup a view, fallback to redshift when not in postgres, fallback to spectrum when not in either! Maybe this should be an entirely different post
