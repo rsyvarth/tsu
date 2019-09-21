@@ -1,0 +1,13 @@
+a.color,
+.content a,
+.nav-header a,
+.post-wrapper .view-post  {
+  color: #d6686b;
+}
+
+a.color:hover,
+.content a:hover,
+.nav-header a:hover,
+.post-wrapper .view-post:hover {
+  color: #ce4a4f;
+}

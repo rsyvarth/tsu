@@ -1,0 +1,30 @@
+---
+id: docker-namespaces-cgroups-explainer
+title: Docker Explainer: Namespaces & Control Groups
+category: Explainer
+status: published
+preview: >
+  Ever wondered what is going on under the hood when running a container? This quick
+  explainer definitely won't give you the full picture, but it is at least
+  a good place to start!
+---
+
+In a recent system configuration I found myself digging into using cgroups to
+reserve resources for some critical system daemons. As I was digging in I discovered
+that cgroups (Control Groups) were actually one of the core concepts used in Docker (and thus Kubernetes)
+for managing Memory & CPU allocation.
+
+I put together this little one-page explainer showing briefly how cgroups and
+namespaces work together to make the foundation of containers. Enjoy!
+
+[![Container Explainer Diagram](./images/docker-namespaces-cgroups-explainer.png)](/static/images/docker-namespaces-cgroups-explainer.png)
+
+### Additional Resources
+Curious and want to dive deeper into the inner working of Docker? Here are some
+resources that I have found helpful when getting started.
+
+- [This post](https://jvns.ca/blog/2016/10/10/what-even-is-a-container/) from Julia
+  Evans's excellent blog
+- Linux man pages on [namespaces](http://man7.org/linux/man-pages/man7/namespaces.7.html)
+  and [cgroups](http://man7.org/linux/man-pages/man7/cgroups.7.html)
+- Docker's documentation on its [underlying technology](https://docs.docker.com/engine/docker-overview/#the-underlying-technology)
