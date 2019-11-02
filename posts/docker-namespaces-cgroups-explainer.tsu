@@ -3,6 +3,7 @@ id: docker-namespaces-cgroups-explainer
 title: Docker Explainer: Namespaces & Control Groups
 category: Explainer
 status: published
+published: 2019-07-21 10:41
 preview: >
   Ever wondered what is going on under the hood when running a container? This quick
   explainer definitely won't give you the full picture, but it is at least

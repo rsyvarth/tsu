@@ -3,6 +3,7 @@ id: bulk-update-github-repo-orgs
 title: Quick Tip: Bulk Update Github Repo Orgs
 category: Quick Tips
 status: published
+published: 2019-07-05 21:40
 preview: >
   A quick one-liner for bulk updating the Organization name in the remote URL for
   all of your cloned Github repos. This is specifically useful when you rename an
