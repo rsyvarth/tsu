@@ -1,0 +1,180 @@
+---
+id: gitops-and-declarative-kubernetes
+title: Gitops & Declarative Kubernetes
+category: Ops
+status: published
+published: 2020-01-05 21:43
+preview: >
+  An overview of the approach we adopted at Gamesight for managing our Kubernetes
+  config for both our in-house services and third-party components.
+---
+
+At Gamesight, one of our most persistent challenges when adopting Kubernetes
+was finding a consistent declarative model that we could use to describe our desired
+cluster state that we could use accross all of our workloads. The space is cluttered
+with multiple difference approaches rising up concurrently and all gaining various
+levels of community support. A mixture of jsonnett, helm charts, straight yaml,
+templated yaml, layered yaml, and the good ‘ol sed commands are being used in the
+wild to help tame the yaml hungry Kubernetes monster.
+
+When tackling this problem for our own use we evaluated a bunch of different solutions
+with the following requirements in mind:
+
+1. **Consistent** - We want a single solution accross all of our workloads. Whether
+we are deploying a third-party operator or our own application we want to use a
+single deployment pattern. Consistent packaging allows us to gain expertise with
+our tooling so we don’t have to spend time learning deployment patterns when
+jumping between projects.
+
+2. **Declarative** - We believe in the benefits of the infrastructure-as-code and
+GitOps movements. This means that our code should be the source of truth for as
+many parts of a project as possible. Kubernetes is a perfect match for this
+approach by using its built-in `apply` pattern to specify the desired state of the
+cluster from a set of yaml files. We want to store as little state in our clusters
+as possible with the goal to be able to spin up replacements for all of our
+infrastructure quickly.
+<br/>
+We use Github to manage the full lifecycle of our applications - merging the
+software development and operational aspects of a service. A project isn’t complete
+without the deployment configuration and any operational changes are run
+through the same code review and test processes that we use for application changes.
+
+3. **Customizable** - We both need to be able to make modifications to vendored
+third-party configurations as well as our own in-house configs depending on our
+environment. Values like environment variable, container tags, scaling values,
+resource requests, and more are often unique to the needs of a particular cluster.
+We need a way to manage these per-cluster overrides without losing our ability to
+track upstream changes (eg directly editing vendored configs is off-limits).
+
+After comparing a bunch of different options we found, what we believe, to be a
+simple solution that meets all of our requirements. While we spent some time evaluating
+Helm, the pattern of storing state in the cluster isn't ideal for our needs.
+
+### Keep it simple, just use YAML (mostly)
+
+One thing that we avoided was any form of fancy templating logic or additional
+abstraction layers (a la jsonnett). Kubernetes is already complicated, fighting
+that complexity with more complexity doesn’t magically yield a simple, easy to understand,
+solution. By keeping our configuration exclusively in yaml we have a single
+language to use for all-things Kubernetes.
+
+We found the excellent **[Kustomize](https://github.com/kubernetes-sigs/kustomize)** project which provides a simple
+and effective model for us to use when composing and customizing yaml configurations.
+I like to think of it as a Cascading Yaml Files model as it enables us to override
+properties of our configuration very similarly to CSS conceptually. With Kustomize
+in our toolkit we can think about our yaml like a dependency graph, enabling us to
+extract common components between different environments.
+
+In projects where our deployment pipeline involves building Docker images to push
+to our image repository, we add in **[Skaffold](https://skaffold.dev/)**. This tool enables us to build and
+tag our docker images based on a the git commit hash, run tests against the container,
+push that image to our repository, run our kustomize build, and replace our image
+tag in our kubernetes config - all with a single command. This brings a consistent
+deployment workflow from development builds to our production CI/CD pipeline.
+
+### Examples
+
+Now that we have selected our tooling lets take a look at a simple example to see
+how it all fits together.
+
+#### Kustomize
+Kustomize is a super straightforward tool that allows you to "overlay" patches
+on top of yaml files without modifying the base file. This allows you to create
+multiple versions of a config file without a bunch of duplicate code.
+
+For example, here is a simple Kubernetes ConfigMap that configures some settings for
+an application in production.
+```yaml
+# configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-configmap
+  labels:
+    app: example-app
+data:
+  ENV_NAME: prod
+  TMP_DIR: /mnt/tmp
+  AWS_REGION: us-west-2
+  MAGIC_STRING: foo
+```
+
+Now when you are running this app in your staging environment you may want to override
+the `ENV_NAME` value while keeping all of your other settings the
+same as they are in production. First, we create our patch for this file, using the
+same `kind` and `name` so Kustomize can find the base to merge.
+
+```yaml
+# staging-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-configmap
+data:
+  ENV_NAME: staging
+```
+
+Now we create a `kustomization.yaml` file which specifies paths to the base resources
+and any patches we want to apply for this environment.
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- configmap.yaml
+
+patchesStrategicMerge:
+- staging-configmap.yaml
+```
+
+Finally by executing the `kustomize build` command and passing the path to our directory
+containing the kustomization.yaml file, we will get the merged yaml. Notice the `ENV_NAME`
+value is replaced with `staging`!
+```bash
+> kustomize build ./
+apiVersion: v1
+data:
+  AWS_REGION: us-west-2
+  ENV_NAME: staging
+  MAGIC_STRING: foo
+  TMP_DIR: /mnt/tmp
+kind: ConfigMap
+metadata:
+  labels:
+    app: example-app
+  name: app-configmap
+```
+
+The most commonly we'll want to actually apply our yaml to a Kubernetes cluster.
+Luckily this can be easily done with a single command!
+```bash
+> kustomize build ops/envs/prod | kubectl apply -f -
+```
+
+#### Structure
+All of our repositories contain an `ops` directory which contain the configuration
+required to operate the application in our various environments (dev, staging, prod, etc).
+Here is a quick overview of the anatomy of what a simple service deployed through our
+standard structure might looks like.
+```
+ops/
+  base/
+    configmap.yaml
+    service.yaml
+    # etc...
+    kustomization.yaml # points to our base resources
+  envs/
+    staging-us-west-2/
+      configmap.yaml
+      kustomization.yaml # patches base with env-specific config
+    prod-us-west-2/
+      configmap.yaml
+      kustomization.yaml # patches base with env-specific config
+```
+
+### Gotchas
+Not all vendored projects use the same packaging approach, unfortunately. We often times find ourselves
+working with projects that use Helm, Jsonnett, or custom scripts to generate
+configuration. To keep our configuration maintainable and upgradable in these
+cases we generate the base configuration for that project getting everything down
+to the common denominator of pure yaml config. Then from there we will write
+Kustomize patches to make any changes to the default configuration we may need.
