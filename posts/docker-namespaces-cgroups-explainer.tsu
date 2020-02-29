@@ -10,18 +10,18 @@ preview: >
   a good place to start!
 ---
 
-In a recent system configuration I found myself digging into using cgroups to
+In a recent system configuration, I found myself digging into using cgroups to
 reserve resources for some critical system daemons. As I was digging in I discovered
-that cgroups (Control Groups) were actually one of the core concepts used in Docker (and thus Kubernetes)
+that cgroups (Control Groups) were one of the core concepts used in Docker (and thus Kubernetes)
 for managing Memory & CPU allocation.
 
 I put together this little one-page explainer showing briefly how cgroups and
 namespaces work together to make the foundation of containers. Enjoy!
 
-[![Container Explainer Diagram](./images/docker-namespaces-cgroups-explainer.png)](/static/images/docker-namespaces-cgroups-explainer.png)
+[![Container Explainer Diagram](./docker-namespaces-cgroups-explainer/docker-namespaces-cgroups-explainer.png)](/static/docker-namespaces-cgroups-explainer/docker-namespaces-cgroups-explainer.png)
 
 ### Additional Resources
-Curious and want to dive deeper into the inner working of Docker? Here are some
+Curious and want to dive deeper into the inner workings of Docker? Here are some
 resources that I have found helpful when getting started.
 
 - [This post](https://jvns.ca/blog/2016/10/10/what-even-is-a-container/) from Julia

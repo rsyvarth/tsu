@@ -11,16 +11,16 @@ preview: >
 
 At Gamesight, one of our most persistent challenges when adopting Kubernetes
 was finding a consistent declarative model that we could use to describe our desired
-cluster state that we could use accross all of our workloads. The space is cluttered
-with multiple difference approaches rising up concurrently and all gaining various
+cluster state that we could use across all our workloads. The space is cluttered
+with many different approaches rising up concurrently and all gaining various
 levels of community support. A mixture of jsonnett, helm charts, straight yaml,
-templated yaml, layered yaml, and the good ‘ol sed commands are being used in the
+templated yaml, layered yaml, and good ‘ol sed commands are used in the
 wild to help tame the yaml hungry Kubernetes monster.
 
 When tackling this problem for our own use we evaluated a bunch of different solutions
 with the following requirements in mind:
 
-1. **Consistent** - We want a single solution accross all of our workloads. Whether
+1. **Consistent** - We want a single solution across all our workloads. Whether
 we are deploying a third-party operator or our own application we want to use a
 single deployment pattern. Consistent packaging allows us to gain expertise with
 our tooling so we don’t have to spend time learning deployment patterns when
@@ -31,8 +31,8 @@ GitOps movements. This means that our code should be the source of truth for as
 many parts of a project as possible. Kubernetes is a perfect match for this
 approach by using its built-in `apply` pattern to specify the desired state of the
 cluster from a set of yaml files. We want to store as little state in our clusters
-as possible with the goal to be able to spin up replacements for all of our
-infrastructure quickly.
+as possible with the goal to be able to quickly spin up replacements for all our
+infrastructure.
 <br/>
 We use Github to manage the full lifecycle of our applications - merging the
 software development and operational aspects of a service. A project isn’t complete
@@ -41,35 +41,34 @@ through the same code review and test processes that we use for application chan
 
 3. **Customizable** - We both need to be able to make modifications to vendored
 third-party configurations as well as our own in-house configs depending on our
-environment. Values like environment variable, container tags, scaling values,
+environment. Values like environment variables, container tags, scaling values,
 resource requests, and more are often unique to the needs of a particular cluster.
 We need a way to manage these per-cluster overrides without losing our ability to
 track upstream changes (eg directly editing vendored configs is off-limits).
 
-After comparing a bunch of different options we found, what we believe, to be a
-simple solution that meets all of our requirements. While we spent some time evaluating
+After comparing a bunch of different options we found a
+simple solution that meets our requirements. While we spent some time evaluating
 Helm, the pattern of storing state in the cluster isn't ideal for our needs.
 
-### Keep it simple, just use YAML (mostly)
+### Keep it simple, use YAML (mostly)
 
-One thing that we avoided was any form of fancy templating logic or additional
+One thing that we avoided was any form of fancy templating logic or
 abstraction layers (a la jsonnett). Kubernetes is already complicated, fighting
-that complexity with more complexity doesn’t magically yield a simple, easy to understand,
-solution. By keeping our configuration exclusively in yaml we have a single
+that complexity with more complexity doesn’t magically yield a simple solution. By keeping our configuration in yaml we have a single
 language to use for all-things Kubernetes.
 
 We found the excellent **[Kustomize](https://github.com/kubernetes-sigs/kustomize)** project which provides a simple
 and effective model for us to use when composing and customizing yaml configurations.
 I like to think of it as a Cascading Yaml Files model as it enables us to override
-properties of our configuration very similarly to CSS conceptually. With Kustomize
-in our toolkit we can think about our yaml like a dependency graph, enabling us to
+properties of our configuration just like CSS. With Kustomize
+in our toolkit, we can think about our yaml like a dependency graph, enabling us to
 extract common components between different environments.
 
 In projects where our deployment pipeline involves building Docker images to push
 to our image repository, we add in **[Skaffold](https://skaffold.dev/)**. This tool enables us to build and
-tag our docker images based on a the git commit hash, run tests against the container,
-push that image to our repository, run our kustomize build, and replace our image
-tag in our kubernetes config - all with a single command. This brings a consistent
+tag our docker images based on the git commit hash, run tests against the container,
+push that image to our repository, run our Kustomize build, and replace our image
+tag in our Kubernetes config - all with a single command. This brings a consistent
 deployment workflow from development builds to our production CI/CD pipeline.
 
 ### Examples
@@ -100,7 +99,7 @@ data:
 ```
 
 Now when you are running this app in your staging environment you may want to override
-the `ENV_NAME` value while keeping all of your other settings the
+the `ENV_NAME` value while keeping all your other settings the
 same as they are in production. First, we create our patch for this file, using the
 same `kind` and `name` so Kustomize can find the base to merge.
 
@@ -126,8 +125,7 @@ patchesStrategicMerge:
 - staging-configmap.yaml
 ```
 
-Finally by executing the `kustomize build` command and passing the path to our directory
-containing the kustomization.yaml file, we will get the merged yaml. Notice the `ENV_NAME`
+Finally, by executing the `kustomize build` command we will get the merged yaml. Notice the `ENV_NAME`
 value is replaced with `staging`!
 ```bash
 > kustomize build ./
@@ -145,16 +143,16 @@ metadata:
 ```
 
 The most commonly we'll want to actually apply our yaml to a Kubernetes cluster.
-Luckily this can be easily done with a single command!
+Luckily you can do this with a single command!
 ```bash
 > kustomize build ops/envs/prod | kubectl apply -f -
 ```
 
 #### Structure
-All of our repositories contain an `ops` directory which contain the configuration
+Our repositories have an `ops` directory that contains the configuration
 required to operate the application in our various environments (dev, staging, prod, etc).
 Here is a quick overview of the anatomy of what a simple service deployed through our
-standard structure might looks like.
+standard structure might look like.
 ```
 ops/
   base/
@@ -172,9 +170,9 @@ ops/
 ```
 
 ### Gotchas
-Not all vendored projects use the same packaging approach, unfortunately. We often times find ourselves
+Not all vendored projects use the same packaging approach, unfortunately. We often find ourselves
 working with projects that use Helm, Jsonnett, or custom scripts to generate
 configuration. To keep our configuration maintainable and upgradable in these
 cases we generate the base configuration for that project getting everything down
-to the common denominator of pure yaml config. Then from there we will write
+to the common denominator of pure yaml config. Then from there, we will write
 Kustomize patches to make any changes to the default configuration we may need.

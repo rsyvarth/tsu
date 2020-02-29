@@ -1,0 +1,18 @@
+---
+id: redshift-query-optimizations
+title: Redshift Query Optimizations
+category: Teams
+status: draft
+preview: >
+  Might be a single or multiple posts covering various tricks for optimizing redshift queries
+---
+
+1. Upserts
+  1. Using joins
+  2. Using unions
+  3. Avoiding deleting rows for the destination table if they weren't modified
+2. Sessionization using window functions and a counter
+3. Optimizing large selects/limits using where over limit
+4. Always using the dist key in joins / conditions
+5. keeping tables on the same dist key for joining, how to delete dist/sort keys
+6. benchmarks for using group by vs window functions for various tasks

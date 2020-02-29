@@ -1,0 +1,40 @@
+---
+id: production-ready-eks
+title: Creating a Production Ready EKS Cluster
+category: Ops
+status: draft
+preview: >
+  Until we have fully serverless Kubernetes there is still work to be done hardening servers
+---
+- Problem
+  - EKS is a wonderful service removing much of the effort needed in running a
+  k8s cluster. Don’t let this give you a false sense of security that you immediately
+  end up with a production ready cluster by just spinning up a few nodes and
+  calling it a day. You are still in charge of managing your nodes, their
+  configuration, etc. This article is a compilation of steps we took to get our
+  EKS cluster production ready
+- Solution
+  - The joy of finding eksctl
+  - It is still early, can’t do everything, but getting us closer to having an
+  easy to use, developer friendly, method of managing our cluster config outside
+  of k8s in a k8s-native looking fashion
+  - Feels more comfortable than jumping into cloud formation or terraform for
+  setting up a cluster. Lets you stay in the k8s configuration mindspace
+- Node configuration
+  - Overrides for some system hardening
+  - Configuration and patch management
+  - Reserving resources for the system
+- Setting up a bastion
+  - Steps for deploying the node
+- Setting up HA DNS
+  - Setup node scaling DNS
+  - Enabling node-local dns caching
+- Autoscaling
+  - Setup the cluster autoscaler
+  - Setup HPA
+
+
+- Remaining work
+  - Enabling multizone clusters
+    - Waiting for the EBS provisioner to become topology aware. This issue is being
+worked on actively and should be resolved in the next release of EKS

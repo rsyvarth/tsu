@@ -11,9 +11,9 @@ preview: >
 ---
 
 I recently needed to rename a Github Organization with about 80 repositories. While
-Github very helpfully creates automated redirects for your repos during the rename
+Github helpfully creates automated redirects for your repos during the rename
 process, it is still [best practice](https://help.github.com/en/articles/renaming-an-organization#changes-that-occur-automatically)
-to go through and update the remote URLs for all of the repos you have cloned on
+to go through and update the remote URLs for all repos you have cloned on
 your computer.
 
 This is a pretty simple process for a single repository. You just need to set your
@@ -21,11 +21,11 @@ remote URL to use the new Organization name (`NewOrgName` in this example).
 ```bash
 > git remote set-url origin git@github.com:NewOrgName/my-repo.git
 ```
-_Note: This post assumes that your remote repo is named origin and you cloned via SSH, please adjust accordingly._
+_Note: This post assumes that your remote repo is named `origin` and you cloned via SSH, please adjust accordingly._
 
 Now, if you are like me you probably have something like 50 repos that you'll need
 to perform this operation on. So instead of doing data entry for an hour, I put together
-this little bash one-liner that loops through all of my repos and performs the update.
+this little bash one-liner that loops through my repos and performs the update.
 ```bash
 for d in ./*/ ; do (cd "$d" && git remote set-url origin $(git remote get-url origin | sed s/:OldOrgName\\//:NewOrgName\\//) && echo "Remote Updated: $d"); done
 ```
