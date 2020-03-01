@@ -7,7 +7,9 @@ preview: >
   Introduction to a real-time data transformation architecture and the s3-sns-lambda-replay tool helps manage replaying data to S3 object creation-triggered lambdas.
 ---
 
-I previously wrote a [post]() about the data processing architecture we have adopted at Gamesight. In this post we are going to cover the 
+I previously wrote a [post](/post/real-time-reports-from-s3-data) about the real-time data processing architecture we have adopted at Gamesight. This post is about the open source tool that we created to reprocess data within our pipeline - creatively named [s3-sns-lambda-replay](https://github.com/Gamesight/s3-sns-lambda-replay).
+
+As a recap, to power our ELT pipeline we are relying on [S3 Event Notifications](https://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html) to SNS. We have data transformation Lambda functions which trigger on new events through SNS. 
 
 One challenge we face is managing streaming live data through our analytics platform. Our data aggregates can have sub 5-minute latency requirements which means that many standard batch processing approaches would be too slow.
 
@@ -35,7 +37,7 @@ After operating our real time pipeline for a few weeks it became apparent that w
 I made a separate post to cover the details of how we handle data replay which you can check out [here]().
 
 ### S3 SNS Lambda Replay
-To resolve these issues I built [s3-sns-lambda-replay](https://github.com/Gamesight/s3-sns-lambda-replay). S3-sns-lambda-replay aims to be a developer-friendly tool to make the process of replaying S3 file creation Lambda invocations stress-free and repeatable.
+To resolve these issues we built [s3-sns-lambda-replay](https://github.com/Gamesight/s3-sns-lambda-replay). S3-sns-lambda-replay aims to be a developer-friendly tool to make the process of replaying S3 file creation Lambda invocations stress-free and repeatable.
 
 The process for using the tool is pretty straightforward:
 
