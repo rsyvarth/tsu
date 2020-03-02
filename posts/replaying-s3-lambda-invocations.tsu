@@ -4,44 +4,38 @@ title: Replaying S3 Object Creation Lambda Invocations
 category: Data
 status: draft
 preview: >
-  Introduction to a real-time data transformation architecture and the s3-sns-lambda-replay tool helps manage replaying data to S3 object creation-triggered lambdas.
+  Introduction to the s3-sns-lambda-replay tool which helps manage replaying data to S3 object creation-triggered lambdas.
 ---
 
-I previously wrote a [post](/post/real-time-reports-from-s3-data) about the real-time data processing architecture we have adopted at Gamesight. This post is about the open source tool that we created to reprocess data within our pipeline - creatively named [s3-sns-lambda-replay](https://github.com/Gamesight/s3-sns-lambda-replay).
+I previously wrote a [post](/post/real-time-reports-from-s3-data) about the real-time data processing architecture we have adopted at Gamesight. **This post covers an open source tool that we created to reprocess data within our ELT pipeline - creatively named s3-sns-lambda-replay.**
 
-As a recap, to power our ELT pipeline we are relying on [S3 Event Notifications](https://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html) to SNS. We have data transformation Lambda functions which trigger on new events through SNS. 
+As a recap, to power our ELT pipeline we are relying on [S3 Event Notifications](https://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html) to SNS. We then have data extraction Lambda functions which listen for new events through SNS and write rows into Redshift via Kinesis Firehose.
 
-One challenge we face is managing streaming live data through our analytics platform. Our data aggregates can have sub 5-minute latency requirements which means that many standard batch processing approaches would be too slow.
-
-Since we are dealing with live stream data we need to get our data in place as quickly as possible. More traditional batch load processes don't get the data into our warehouse for live-analysis fast enough. So we have come up with a minimal real-time serverless transform process that handles shuttling data into our warehouse as soon as it hits our lake.
+![S3 Transform Architecture](./replaying-s3-lambda-invocations/architecture.png)(maxwidth=600px)
+<center>_Our ELT architecture_</center>
 
 ### Jump To:
-- [Our real-time pipeline architecture](#)
-- [Pitfalls](#)
-- [My data replay tool](#)
+- [The problem](#)
+- [How to use s3-sns-lambda-replay](#)
 
-### Architecture
-Instead we have adopted a real-time method that triggers data transforms and loads immediately on them being written to the Data Lake. This solution relies on Lambdas called from SNS triggers on files written to S3.
+### The problem
 
-### Pitfalls
-One early weakness we identified is that if we wanted to add a new transformations to our pipeline we would need a way to backfill any aggregations with historical data from our Data Lake. Additionally, if one of our existing transformation functions is failing - either due to bad code or a change in data model - we would need a way to replay those records.
+One weakness is that if we wanted to add a new exctractors to existing data we would need a way to reprocess historical data from S3. Additionally, if one of our existing extract functions failed - either due to bad code or a change in data model - we would need a way to replay those records as well.
 
-![Bad transform code leads to failed messages](./replaying-s3-lambda-invocations/bad-deploy.png)
+![Bad transform code leads to failed messages](./replaying-s3-lambda-invocations/bad-deploy.png)(maxwidth=600px)
 <center>_Bad transform code leads to failed message processing_</center>
 
-![Which then leads to data missing from our destination](./replaying-s3-lambda-invocations/missing-data.png)
+![Which then leads to data missing from our destination](./replaying-s3-lambda-invocations/missing-data.png)(maxwidth=600px)
 <center>_Failed message processing then leads to records missing from our destination_</center>
 
-After operating our real time pipeline for a few weeks it became apparent that we were going to need an easy to use tool to handle data replay if we were going to continue to quickly deploy new features to our data pipeline. We needed to ensure that everyone on the team was confident that they could spin up a new processing pipeline or fix a broken one without it becoming a huge operational lift.
+We needed to be sure that everyone on the team was confident that they could spin up a new processing pipeline or fix a broken one without it becoming a huge operational lift.
 
-I made a separate post to cover the details of how we handle data replay which you can check out [here]().
-
-### S3 SNS Lambda Replay
+### How to use s3-sns-lambda-replay
 To resolve these issues we built [s3-sns-lambda-replay](https://github.com/Gamesight/s3-sns-lambda-replay). S3-sns-lambda-replay aims to be a developer-friendly tool to make the process of replaying S3 file creation Lambda invocations stress-free and repeatable.
 
-The process for using the tool is pretty straightforward:
+The tool is straightforward to use:
 
-1. Use the interactive CLI to select the directories to be replayed
+1. Use the interactive CLI to select the directories to replay data from
 
   ```
   > python s3-lambda-replay.py
@@ -79,8 +73,6 @@ The process for using the tool is pretty straightforward:
 
   ? Is this configuration correct?  (y/N)
   ```
-4. From here s3-sns-lambda-replay scans S3 for the files to replay, batch those files into payloads, and begin triggering your Lambdas.
-![Graph showing invocation spike from using the replay tool](./replaying-s3-lambda-invocations/invocation-graph.png)(maxwidth=600px)
-<center>_Graph showing invocation spike from using the replay tool_</center>
+4. From here s3-sns-lambda-replay scans S3 for the files to replay, batch those files into mock SNS payloads, and begins triggering your Lambdas in parallel.
 
 That's it, hope you find this tool to be useful! You can check it out on [Github](https://github.com/Gamesight/s3-sns-lambda-replay).

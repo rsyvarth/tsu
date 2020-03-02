@@ -14,7 +14,7 @@ The data we collect is stored in S3. **Our challenge when creating dashboards wa
 
 In this post, we'll cover the three approaches we considered for running analytical queries against data in S3, pros and cons of each, and how we ended up settling on the Redshift-backed approach we currently use.
 
-![S3 Transform Architecture](./real-time-reports-from-s3-data/problem.png)
+![S3 Transform Architecture](./real-time-reports-from-s3-data/problem.png)(maxwidth=600px)
 
 ### Jump To:
 - [Option 1: Athena](#athena)
@@ -23,9 +23,9 @@ In this post, we'll cover the three approaches we considered for running analyti
   - [Gotchas](#gotchas)
 
 ### Athena
-The first solution we looked into was directly querying our data in S3 using AWS [Athena](https://aws.amazon.com/athena/). Athena is a purpose built serverless tool for running SQL queries against data stored in S3. Looking at the marketing page it seems like the perfect solution - large scale queries directly against S3 "delivered in seconds." The billing is straightforward at $5/terabyte of data scanned.
+The first solution we looked into was directly querying our data in S3 using [AWS Athena](https://aws.amazon.com/athena/). Athena is a purpose built serverless tool for running SQL queries against data stored in S3. Looking at the marketing page it seems like the perfect solution - large scale queries directly against S3 "delivered in seconds." The billing is straightforward at $5/terabyte of data scanned.
 
-![S3 Transform Architecture](./real-time-reports-from-s3-data/athena.png)
+![S3 Transform Architecture](./real-time-reports-from-s3-data/athena.png)(maxwidth=600px)
 <center>_Using Athena to directly query data from S3_</center>
 
 In practice, we found out that **Athena latency can be several minutes when your queries involve aggregating terabytes of data**. There were also downsides from a cost perspective. Since Athena recalculates results from S3 for every query, repeatedly running the same queries can become expensive.
@@ -35,7 +35,7 @@ We attempted putting a cache in front of Athena to address these issues but we s
 > **When to use**: Athena is great for ad-hoc queries, especially when you don't have regular query patterns against your data. If you want to run the same query repeatedly, like when powering end-user facing reports, you might need a faster and more cost effective solution. We still regularly use Athena at Gamesight for ad-hoc data exploration.
 
 ### AWS Glue & ETL
-Next, we looked to a more traditional ETL architecture with AWS [Glue](https://aws.amazon.com/glue/). ETL is a generalized approach to copying and aggregating data between datastores. It includes three steps:
+Next, we looked to a more traditional ETL architecture with [AWS Glue](https://aws.amazon.com/glue/). ETL is a generalized approach to copying and aggregating data between datastores. It includes three steps:
 
 - **Extract**: Read data out of the source system. In our example case, read from S3.
 - **Transform**: Apply a function to the extracted data to prepare it for storage. For Gamesight's dashboards, we aggregate our data in summaries, like "streams per hour".
@@ -43,7 +43,7 @@ Next, we looked to a more traditional ETL architecture with AWS [Glue](https://a
 
 We spent some time looking into ETL architectures that use Map Reduce tools like Hadoop or Spark. We used Glue, a serverless managed Spark service from AWS, for our evaluation.
 
-![S3 Transform Architecture](./real-time-reports-from-s3-data/mapreduce.png)
+![S3 Transform Architecture](./real-time-reports-from-s3-data/mapreduce.png)(maxwidth=600px)
 <center>_Using a Map Reduce framework to transform our data_</center>
 
 The minimum billing duration for Spark jobs run in Glue is 10 minutes. This is problematic for our workload since the majority of the job powering our real-time reports are small batches that only process new data. **Our short running jobs regularly execute in 1-2 minutes so we were overpaying by more than 80%.**
@@ -59,7 +59,7 @@ While we prototyped ETL workflows, we also evaluated multiple datastores to hold
 
 To handle the EL steps, we use SNS to trigger Lambdas when data is written to S3[^sns]. These Lambdas extract row level data and write formatted rows to Kinesis Firehose which loads them into Redshift. Using serverless components for our extract and load steps takes operational burden like scaling and maintenance off of our plate.
 
-![S3 Transform Architecture](./real-time-reports-from-s3-data/architecture.png)
+![S3 Transform Architecture](./real-time-reports-from-s3-data/architecture.png)(maxwidth=600px)
 <center>_Simple Lambdas extract and load data and transforms occur in Redshift_</center>
 
 Data ingest queries in Redshift run every few minutes and take raw records from Firehose, aggregates them, and saves them into summary tables for reporting. Redshift does most of the heavy lifting rather than an external data processing system. Some key benefits we have seen with the ELT architecture:

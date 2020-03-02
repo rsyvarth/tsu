@@ -12,8 +12,6 @@ preview: >
   begins to struggle.
 ---
 
-> This article is also available through the Gamesight engineering blog [here](https://blog.gamesight.io)
-
 At Gamesight we rely heavily on AWS Redshift to perform the in-database transformations
 and aggregations for the ELT pipeline that power our real-time analytics. Redshift’s massively
 parallel architecture is well suited for this workload and gives us great performance
