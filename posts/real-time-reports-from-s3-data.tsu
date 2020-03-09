@@ -8,6 +8,8 @@ preview: >
   At Gamesight, we build real-time dashboards so game developers can monitor social activity for their game. Here I compare the different architectures we evaluated for generating reports from data that we have stored in S3.
 ---
 
+> This post is also available on the Gamesight engineering blog [here](https://blog.gamesight.io/designing-real-time-reports-from-s3-data/)
+
 At [Gamesight](https://gamesight.io), we build real-time dashboards so game developers can monitor social activity for their game. To power these dashboards, we have multiple data pipelines monitoring gaming content  on platforms like Twitch, YouTube, and Twitter. Since live streams are an important data source, our reports need to update with new data as it comes in.
 
 The data we collect is stored in S3. **Our challenge when creating dashboards was taking the existing data in S3 and running reports against it in near real-time, all while keeping costs low.**
@@ -87,4 +89,4 @@ The ELT approach has worked well for Gamesight, but it isn't without its own dra
 
     If you are planning on implementing a pipeline utilizing this S3-to-SNS-to-Lambda structure it is vital (for your own sanity) that all of your transform lambdas are idempotent. This is an important feature of a stable data pipeline since it allows for regular re-processing of data without having to worry about precise time boundaries or the effect data order will have on your system.
 
-[^stores]: While Redshift is incredible for running analytical queries across billions of rows, its a poor choice for simple operations like lookups by and ID. We have adopted a model of syncing data from Redshift into specialized datastores when our application demands different performance characteristics. For example, we keep copies of our content creator profiles in Postgres (using [dblink](https://aws.amazon.com/blogs/big-data/join-amazon-redshift-and-amazon-rds-postgresql-with-dblink/)) to handle fast lookups by ID. Additionally, we use Elasticsearch to power our search feature which is great for quickly providing the most relevant results to full text searches.
+[^stores]: While Redshift is incredible for running analytical queries across billions of rows, it's a poor choice for simple operations like lookups by an ID. We have adopted a model of syncing data from Redshift into specialized datastores when our application demands different performance characteristics. For example, we keep copies of our content creator profiles in Postgres (using [dblink](https://aws.amazon.com/blogs/big-data/join-amazon-redshift-and-amazon-rds-postgresql-with-dblink/)) to handle fast lookups by ID. Additionally, we use Elasticsearch to power our search feature which is great for quickly providing the most relevant results to full text searches.
