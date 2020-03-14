@@ -1,17 +1,19 @@
 from src.util import templates
 from src.services import post_service
+from email import utils
 
 def handler(event, context):
     posts = post_service.list_posts()
 
-    html = templates.render('home.html', {
+    xml = templates.render('rss.xml', {
         'posts': posts,
+        'date_format': utils.format_datetime
     })
-    
+
     return {
         'statusCode': 200,
-        'body': html,
+        'body': xml,
         'headers': {
-            'Content-Type': "text/html"
+            'Content-Type': "application/rss+xml"
         }
     }

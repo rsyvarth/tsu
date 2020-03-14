@@ -94,6 +94,12 @@ functions:
     events:
       - http: GET /about
 
+  rss:
+    handler: src/controllers/rss.handler
+    name: tsu-${self:custom.config.name}-rss
+    events:
+      - http: GET /rss.xml
+
   ########################
   # API routes
   ########################
