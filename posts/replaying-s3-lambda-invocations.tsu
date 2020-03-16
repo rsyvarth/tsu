@@ -20,7 +20,7 @@ As a recap, to power our ELT pipeline we are relying on [S3 Event Notifications]
 
 ### The problem
 
-One weakness is that if we wanted to add a new exctractors to existing data we would need a way to reprocess historical data from S3. Additionally, if one of our existing extract functions failed - either due to bad code or a change in data model - we would need a way to replay those records as well.
+One weakness with our pipeline is that when we add new exctractors for existing data we need to reprocess historical data from S3. Additionally, if an extract function fails irrecoverably - either from a bad deployment or a data model changes - we need a way to replay the records.
 
 ![Bad transform code leads to failed messages](./replaying-s3-lambda-invocations/bad-deploy.png)(maxwidth=600px)
 <center>_Bad transform code leads to failed message processing_</center>
@@ -28,7 +28,7 @@ One weakness is that if we wanted to add a new exctractors to existing data we w
 ![Which then leads to data missing from our destination](./replaying-s3-lambda-invocations/missing-data.png)(maxwidth=600px)
 <center>_Failed message processing then leads to records missing from our destination_</center>
 
-We needed to be sure that everyone on the team was confident that they could spin up a new processing pipeline or fix a broken one without it becoming a huge operational lift.
+We need to be sure that everyone on the team was confident that they can spin up a new processing pipeline or fix a broken one without it becoming a huge operational burden.
 
 ### How to use s3-sns-lambda-replay
 To resolve these issues we built [s3-sns-lambda-replay](https://github.com/Gamesight/s3-sns-lambda-replay). S3-sns-lambda-replay aims to be a developer-friendly tool to make the process of replaying S3 file creation Lambda invocations stress-free and repeatable.

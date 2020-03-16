@@ -1,0 +1,22 @@
+---
+id: shiny-tech
+title: Shiny Tech
+category: Teams
+status: draft
+preview: >
+  People frequently speak out about building products with proven "boring" technology vs chasing trends. Here I make the case for why you should ignore those people and chase the shiny new tech!
+---
+
+Proven, boring tech needs to be your core. You don't want to be using toys to power missions critical stuff. It is important to consder the stability of your products. That is all great.
+
+At some point you need to consinder long-term developer productivity though. Many developers are the early adoperts risk taking, bleeding edge types - especially at startups. Exclusively building tech using old boring stable tools is doing a disservice both to your team and your company.
+
+1. You won't get the best out of your team if they aren't fulfilled with their work. It is true that a strong vision and businesss objective can get you pretty far with that, but at the end of the day engineers love technology and they want to be challenged and grow technically.
+2. Providing opportunities to use new tools, try new things is key to growing your team skills. Let them level up and grow in their skills and build value in the market. You don't want to hold anyone back. Additiaonlly, you will get better performance out of team members that are more familiar with trends in the market. They can make more intelligent engineering descisions when they aren't tunnel visioned in on a single tool/ecosystem.
+3. New tech is genuinely better sometimes. We are relying heavily on serverless tooling from AWS which has let us scale our operations on a lean team.
+
+Don't restrict the tooling that can be used too heaily. Let new features, tools, experiments go in whatever stack makes sense. Obviously you need the core of your infrastructure to be strong.
+
+It is a balance, you need to figure out what is right for you company and your team. REcently we have been leaning into new and fun tech more and more as our core infrastructurebecomes more mature. Building out experimental feautres.
+
+Be concious of how much time you are spending learning and experimenting vs delivering value to your customers. At the end of the day if you aren't delivering for your customers it doesn't matter.
